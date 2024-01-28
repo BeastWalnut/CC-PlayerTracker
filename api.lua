@@ -1,4 +1,4 @@
-local utils = require("utils");
+local _utils = require("utils");
 
 ---@class FoundPos
 ---@field x number
@@ -15,7 +15,7 @@ local utils = require("utils");
 local Tracker = {};
 Tracker.__index = Tracker;
 
----Returns a new instance of <Tracker>
+---Returns a new instance of `Tracker`.
 ---@param user string
 ---@return Tracker
 function Tracker:new(user)
@@ -39,11 +39,11 @@ function Tracker:change_host(player)
 	self.user = player;
 end
 
----Returns true if <player> is online.
+---Returns true if `player` is online.
 ---@param player string
 ---@return boolean
 function Tracker:is_online(player)
-	return utils.contains(self.finder.getOnlinePlayers(), player);
+	return table.contains(self.finder.getOnlinePlayers(), player);
 end
 
 ---Returns a list of online players excluding the user
@@ -67,7 +67,9 @@ function Tracker.get_direction(user, x, z)
 	local abs_yaw = math.atan2(x, -z) * (180 / math.pi);
 	local yaw = abs_yaw - user.yaw;
 
-	if yaw > 180 then yaw = yaw - 180; end
+	if yaw > 180 then
+		return yaw - 180;
+	end
 
 	return yaw;
 end
@@ -86,14 +88,14 @@ function Tracker.get_distance(user, target)
 	return dist, delta_x, delta_z;
 end
 
----Gets the coordinates of <player>
+---Gets the coordinates of `player`.
 ---@param player string
 ---@return PlayerPos | nil
 function Tracker:find(player)
 	return self.finder.getPlayerPos(player)
 end
 
----Gets the relative coordinates of <player>
+---Gets the relative coordinates of `player`.
 ---@param player string
 ---@return FoundPos | nil
 function Tracker:relative_find(player)
@@ -113,7 +115,7 @@ function Tracker:relative_find(player)
 
 	if user.dimension == target.dimension then
 		local dist, delta_x, delta_z = self.get_distance(user, target);
-		result.distance = math.ceil(dist);
+		result.distance = dist;
 		result.direction = self.get_direction(user, delta_x, delta_z);
 	end
 

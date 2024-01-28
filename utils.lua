@@ -1,7 +1,8 @@
+---Returns true if `tbl` contains `val`
 ---@param tbl table
 ---@param val any
 ---@return boolean
-local function contains(tbl, val)
+function table.contains(tbl, val)
 	---@diagnostic disable-next-line: no-unknown
 	for _, v in ipairs(tbl) do
 		if v == val then
@@ -11,20 +12,11 @@ local function contains(tbl, val)
 	return false
 end
 
----Get the current user.
----@return string
-local function get_user()
-	-- TODO
+---Rounds and returns `number`
+---@param number number
+---@return integer
+function math.round(number)
+	return math.floor(number + .5);
 end
 
----Sets the current user.
----@param name string
-local function set_user(name)
-	--TODO
-end
-
-return {
-	contains = contains,
-	get_user = get_user,
-	set_user = set_user,
-}
+return {}
