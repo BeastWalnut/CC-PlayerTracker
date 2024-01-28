@@ -46,6 +46,18 @@ function Tracker:is_online(player)
 	return utils.contains(self.finder.getOnlinePlayers(), player);
 end
 
+---Returns a list of online players excluding the user
+---@return string[]
+function Tracker:get_online()
+	local online = {};
+	for _, player in ipairs(self.finder.getOnlinePlayers()) do
+		if player ~= self.user then
+			table.insert(online, player);
+		end
+	end
+	return online;
+end
+
 ---Returns the direction of the given coordinates
 ---@param user PlayerPos
 ---@param x number

@@ -13,6 +13,18 @@ if not is_online then
 	return;
 end
 
+local online_players = tracker:get_online();
+if #online_players == 0 then
+	print("You are all alone.");
+	return;
+else
+	print("Online players:")
+	for _, player in ipairs(online_players) do
+		print(" -" .. player)
+	end
+end
+
+print("Finding: " .. TARGET);
 local position = tracker:relative_find(TARGET);
 if (not position) and (not tracker:is_online(TARGET)) then
 	print("Target: " .. TARGET .. " Is not online.")
