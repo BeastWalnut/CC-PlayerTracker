@@ -35,7 +35,7 @@ end
 
 ---Changes the user for the tracker
 ---@param player string
-function Tracker:change_host(player)
+function Tracker:change_user(player)
 	self.user = player;
 end
 
@@ -90,31 +90,45 @@ end
 
 ---Gets the coordinates of `player`.
 ---@param player string
----@return PlayerPos | nil
+---@return PlayerPos|nil
 function Tracker:find(player)
-	return self.finder.getPlayerPos(player)
+	local player_pos = self.finder.getPlayerPos(player);
+	if player_pos.dimension then
+		return player_pos;
+	else
+		return;
+	end
 end
 
----Gets the relative coordinates of `player`.
----@param player string
+---Get the coordinates of `user`
+---@return PlayerPos | nil
+function Tracker:user_pos()
+	if self.user == "gps" then
+		return Todo("Get position from gps");
+	end
+	return self:find(self.user);
+end
+
+---Gets the relative coordinates of `target`.
+---@param target string
 ---@return FoundPos | nil
-function Tracker:relative_find(player)
-	local target = self:find(player);
-	if not target then return; end
+function Tracker:relative_find(target)
+	local target_pos = self:find(target);
+	if not target_pos then return; end
 
 	---@type FoundPos
 	local result = {
-		x = target.x,
-		y = target.y,
-		z = target.z,
-		dimension = target.dimension,
+		x = target_pos.x,
+		y = target_pos.y,
+		z = target_pos.z,
+		dimension = target_pos.dimension,
 	}
 
-	local user = self:find(self.user);
+	local user = self:user_pos();
 	if not user then return result; end
 
-	if user.dimension == target.dimension then
-		local dist, delta_x, delta_z = self.get_distance(user, target);
+	if user.dimension == target_pos.dimension then
+		local dist, delta_x, delta_z = self.get_distance(user, target_pos);
 		result.distance = dist;
 		result.direction = self.get_direction(user, delta_x, delta_z);
 	end
