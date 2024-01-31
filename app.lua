@@ -240,7 +240,8 @@ function ACTIONS.help()
 			desc = pretty.concat(
 				pretty.text("Use instead of "),
 				text.setting("`player`"),
-				pretty.text(" to find the nearest one instead")
+				--TODO: Remove `. Not yet implemented`
+				pretty.text(" to find the nearest one instead. Not yet implemented")
 			),
 		},
 		{
@@ -267,7 +268,8 @@ function ACTIONS.help()
 		print("")
 	end
 
-	Todo("wait for user to finish");
+	print_last(text.secondary("Press any key to continue."));
+	os.pullEvent("key");
 end
 
 function ACTIONS.exit() end
