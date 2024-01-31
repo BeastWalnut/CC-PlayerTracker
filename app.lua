@@ -16,6 +16,13 @@ local DIMENSIONS = {
 	["minecraft:the_end"] = "The End",
 };
 
+---@param doc Doc
+local function print_last(doc)
+	local _, h = term.getSize();
+	term.setCursorPos(1, h);
+	pwrite(doc)
+end
+
 ---@return string
 local function change_user()
 	local new_user = Todo("prompt for username");
@@ -75,15 +82,29 @@ local ACTION_NAMES = {
 
 ---@type { [string]: fun(tracker: Tracker) }
 local ACTIONS = {};
+function ACTIONS.unknown()
+	pprint(text.error("Unknown action."));
+	pprint(pretty.concat(
+		text.info("Use"),
+		text.setting(" Help "),
+		text.info("to get the known commands.")
+	));
+	print_last(text.secondary("Press any key to continue."));
+	os.pullEvent("key");
+end
+
 function ACTIONS.find(tracker)
+	local online = tracker:get_online();
+	table.insert(online, "Nearest");
+	table.insert(online, "nearest");
 	local target = prompt(
 		text.secondary("Choose player to find:"),
-		tracker:get_online(),
+		online,
 		colors.red
 	);
 
-	if target == "nearest" then
-		--TODO: Get nearest player.
+	if target:lower() == "nearest" then
+		target = Todo("Get nearest player.");
 	end
 
 	if not target:find("%S") then
@@ -96,9 +117,7 @@ function ACTIONS.find(tracker)
 			pprint(text.secondary(" Is at:\n"));
 			print_pos(target_pos);
 
-			local _, h = term.getSize();
-			term.setCursorPos(1, h);
-			pwrite(text.secondary("Press any key to continue."))
+			print_last(text.secondary("Press any key to continue."))
 
 			os.pullEvent("key");
 			return;
@@ -111,9 +130,7 @@ function ACTIONS.find(tracker)
 		end
 	end
 
-	local _, h = term.getSize();
-	term.setCursorPos(1, h);
-	pwrite(text.secondary("Press any key to continue."))
+	print_last(text.secondary("Press any key to continue."))
 
 	local timer_id = os.startTimer(2);
 	repeat
@@ -125,15 +142,18 @@ end
 ACTIONS.locate = ACTIONS.find;
 
 function ACTIONS.track(tracker)
+	local online = tracker:get_online();
+	table.insert(online, "Nearest");
+	table.insert(online, "nearest");
 	local target = prompt(
 		text.secondary("Choose player to find:"),
-		tracker:get_online(),
+		online,
 		colors.red
 	);
 
-	local find_nearest = target == "nearest";
+	local find_nearest = target:lower() == "nearest";
 	if find_nearest then
-		--TODO: Get nearest player.
+		target = Todo("Get nearest player.");
 		if not target then
 			pprint(text.error("No players in this dimension."));
 			return;
@@ -152,7 +172,7 @@ function ACTIONS.track(tracker)
 	while true do
 		Clear();
 		if find_nearest then
-			--TODO: Get nearest player.
+			target = Todo("Get nearest player.");
 		end
 		local target_pos = tracker:relative_find(target);
 		if target_pos then
@@ -169,9 +189,7 @@ function ACTIONS.track(tracker)
 			pprint(text.error(" logged off."))
 		end
 
-		local _, h = term.getSize();
-		term.setCursorPos(1, h);
-		pwrite(text.secondary("Press any key to continue."))
+		print_last(text.secondary("Press any key to continue."))
 
 		local timer_id = os.startTimer(3);
 		repeat
@@ -188,42 +206,63 @@ function ACTIONS.user()
 end
 
 function ACTIONS.help()
-	---@class HelpEntry
-	---@field name Doc
-	---@field desc Doc
-
 	Clear();
 
-	---@type HelpEntry[]
 	local ENTRIES = {
 		{
 			name = text.info("Help"),
-			desc = pretty.text("Prints this message."),
+			desc = pretty.text("Prints this message"),
 		},
+		{
+			name = text.info("Find"),
+			desc = pretty.concat(
+				pretty.text("Finds and prints the coords of "),
+				text.setting("`player`")
+			),
+		},
+		{
+			name = text.info("Track"),
+			desc = pretty.concat(
+				pretty.text("Continuously finds and prints the coords of "),
+				text.setting("`player`")
+			),
+		},
+		{
+			name = text.primary("Nearest"),
+			desc = pretty.concat(
+				pretty.text("Use instead of "),
+				text.setting("`player`"),
+				pretty.text(" to find the nearest one instead")
+			),
+		},
+		{
+			name = text.info("Nick"),
+			desc = text.error("Not yet implemented"),
+		},
+		{
+			name = text.info("User"),
+			desc = pretty.concat(
+				pretty.text("Use to change the user of the program to "),
+				text.setting("`player`")
+			),
+		},
+		{
+			name = text.error("Exit"),
+			desc = pretty.text("Exits the program"),
+		}
 	};
 
 	for _, entry in ipairs(ENTRIES) do
 		pwrite(entry.name);
-		pwrite(text.secondary(": "));
+		pwrite(text.secondary("->"));
 		pprint(entry.desc);
+		print("")
 	end
 
 	Todo("wait for user to finish");
 end
 
-function ACTIONS.exit()
-	Clear();
-	local c = term.getTextColor();
-	term.setTextColor(colors.red);
-
-	write(("Exiting %s"):format(arg[0]));
-	textutils.slowPrint("...", 5);
-
-	term.setTextColor(c);
-	error("", 0);
-end
-
-local history = {};
+function ACTIONS.exit() end
 
 if not user then
 	Todo("prompt if user should be set")
@@ -231,6 +270,7 @@ if not user then
 end
 local tracker = Tracker:new(user);
 
+local history = {};
 repeat
 	Clear();
 	print_online(tracker);
@@ -247,6 +287,15 @@ repeat
 		table.insert(history, action);
 		ACTIONS[action](tracker);
 	else
-		Todo("Unknown action (maybe print or suggest `help`)");
+		ACTIONS.unknown(tracker);
 	end
-until false
+until action == "exit";
+
+Clear();
+local c = term.getTextColor();
+term.setTextColor(colors.red);
+
+write(("Exiting %s"):format(arg[0]));
+textutils.slowPrint("...", 5);
+
+term.setTextColor(c);
