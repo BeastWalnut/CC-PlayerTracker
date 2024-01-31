@@ -28,6 +28,12 @@ function Todo(str)
 	error(err_msg);
 end
 
+---Clears the screen.
+function Clear()
+	term.clear();
+	term.setCursorPos(1, 1);
+end
+
 local config;
 local text = {};
 
@@ -149,19 +155,9 @@ local function change_user(new_user)
 end
 
 ---Gets the current user of the tracker.
----@return string
+---@return string | nil
 local function get_user()
-	if config.user then
-		return config.user;
-	end
-
-	--TODO: Prompt for user.
-	local new_user = Todo("Get username");
-	change_user(new_user);
-
-	pretty.write(text.setting("User was set to: "));
-	pretty.print(text.info(new_user));
-	return new_user;
+	return config.user;
 end
 
 return {
