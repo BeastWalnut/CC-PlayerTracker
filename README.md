@@ -2,4 +2,7 @@
 This is a small project i made for ComputerCraft, it uses the mod Advanced Peripherals to find the location and direction of players.
 
 # Installation
-This is still a Work In Progress so theres no installation method yet.
+To install just run this command on your CC device.
+```
+wget run https://raw.githubusercontent.com/BeastWalnut/CC-PlayerTracker/master/install.lua
+```
