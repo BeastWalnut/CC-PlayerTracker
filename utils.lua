@@ -25,7 +25,7 @@ end
 ---@return any
 function Todo(str)
 	local err_msg = ("Not implemented: %s"):format(str);
-	error(err_msg);
+	error(err_msg, 0);
 end
 
 ---Clears the screen.
