@@ -77,10 +77,12 @@ end
 ---Returns the distance of the given coordinates
 ---@param user PlayerPos
 ---@param target PlayerPos
----@return number dist
----@return number delta-x
----@return number delta-z
+---@return number? dist
+---@return number? delta-x 
+---@return number? delta-z
 function Tracker.get_distance(user, target)
+	if user.dimension ~= target.dimension then return; end
+
 	local delta_x = user.x - target.x;
 	local delta_z = user.z - target.z;
 	local dist = math.sqrt((delta_z ^ 2) + (delta_x ^ 2));
@@ -90,7 +92,7 @@ end
 
 ---Gets the coordinates of `player`.
 ---@param player string
----@return PlayerPos|nil
+---@return PlayerPos | nil
 function Tracker:find(player)
 	local player_pos = self.finder.getPlayerPos(player);
 	if player_pos.dimension then
@@ -107,6 +109,29 @@ function Tracker:user_pos()
 		return Todo("Get position from gps");
 	end
 	return self:find(self.user);
+end
+
+---Get the nearest player to `user`
+---@return string
+function Tracker:get_nearest()
+	local user_pos = self:user_pos();
+	local online = self:get_online();
+
+	local nearest = online[1];
+	if not user_pos then return nearest; end
+
+	local min_distance = math.huge;
+	for _, player in ipairs(online) do
+		local player_pos = self:find(player);
+		if player_pos then
+			local dist, _, _ = self.get_distance(user_pos, player_pos);
+			if dist and dist < min_distance then
+				min_distance = dist;
+				nearest = player;
+			end
+		end
+	end
+	return nearest;
 end
 
 ---Gets the relative coordinates of `target`.
@@ -127,9 +152,10 @@ function Tracker:relative_find(target)
 	local user = self:user_pos();
 	if not user then return result; end
 
-	if user.dimension == target_pos.dimension then
-		local dist, delta_x, delta_z = self.get_distance(user, target_pos);
+	local dist, delta_x, delta_z = self.get_distance(user, target_pos);
+	if dist then
 		result.distance = dist;
+		---@diagnostic disable-next-line: param-type-mismatch
 		result.direction = self.get_direction(user, delta_x, delta_z);
 	end
 

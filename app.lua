@@ -110,14 +110,18 @@ function ACTIONS.find(tracker)
 		online,
 		colors.red
 	);
+	local enabled = true;
 
 	if target:lower() == "nearest" then
-		target = Todo("Get nearest player.");
+		target = tracker:get_nearest();
 	end
 
-	if not target:find("%S") then
+	if not target then
+		pprint(text.error("  No players in this dimension."));
+		enabled = false;
+	elseif not target:find("%S") then
 		pprint(text.error("  Idiot forgot to write a name."));
-	else
+	elseif enabled then
 		local target_pos = tracker:relative_find(target);
 		if target_pos then
 			Clear();
@@ -139,7 +143,6 @@ function ACTIONS.find(tracker)
 	end
 
 	print_last(text.secondary("Press any key to continue."))
-
 	local timer_id = os.startTimer(2);
 	repeat
 		local event, id = os.pullEvent();
@@ -158,59 +161,60 @@ function ACTIONS.track(tracker)
 		online,
 		colors.red
 	);
+	local enabled = true;
 
 	local find_nearest = target:lower() == "nearest";
 	if find_nearest then
-		target = Todo("Get nearest player.");
-		if not target then
-			pprint(text.error("No players in this dimension."));
-			return;
-		end
+		target = tracker:get_nearest();
 	end
 
-	if not target:find("%S") then
+	if not target then
+	elseif not target:find("%S") then
 		pprint(text.error("  Idiot forgot to write a name."));
-		return;
+		enabled = false;
 	elseif not tracker:is_online(target) then
 		pwrite(text.info(target));
 		pprint(text.error(" is offline."))
-		return;
+		enabled = false;
 	end
 
-	while true do
+	while enabled do
 		Clear();
 		if find_nearest then
-			target = Todo("Get nearest player.");
+			target = tracker:get_nearest();
 		end
-		local target_pos = tracker:relative_find(target);
-		if target_pos then
-			pwrite(text.secondary("Tracking: "));
-			pprint(text.info(target .. "\n"));
-			print_pos(target_pos);
-		elseif tracker:is_online(target) then
-			pwrite(text.info(target));
-			pprint(text.error(" is in another dimension."))
+		if target then
+			local target_pos = tracker:relative_find(target);
+			if target_pos then
+				pwrite(text.secondary("Tracking: "));
+				pprint(text.info(target .. "\n"));
+				print_pos(target_pos);
+			elseif tracker:is_online(target) then
+				pwrite(text.info(target));
+				pprint(text.error(" is in another dimension."))
+			else
+				pwrite(text.info(target));
+				pprint(text.error(" logged off."))
+			end
 		elseif find_nearest then
-			pprint(text.error("No players in this dimension."))
-		else
-			pwrite(text.info(target));
-			pprint(text.error(" logged off."))
+			pprint(text.error("  No players in this dimension."))
 		end
 
 		print_last(text.secondary("Press any key to continue."))
-
 		local timer_id = os.startTimer(3);
 		repeat
 			local event, id = os.pullEvent();
 			if event == "key" then return; end
 		until id == timer_id
 	end
+	print_last(text.secondary("Press any key to continue."))
+	os.pullEvent("key");
 end
 
 ACTIONS.stalk = ACTIONS.track;
 
-function ACTIONS.user()
-	user = change_user();
+function ACTIONS.user(tracker)
+	user = change_user(tracker);
 end
 
 function ACTIONS.help()
@@ -240,8 +244,7 @@ function ACTIONS.help()
 			desc = pretty.concat(
 				pretty.text("Use instead of "),
 				text.setting("`player`"),
-				--TODO: Remove `. Not yet implemented`
-				pretty.text(" to find the nearest one instead. Not yet implemented")
+				pretty.text(" to find the nearest one instead")
 			),
 		},
 		{
