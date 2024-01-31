@@ -23,10 +23,18 @@ local function print_last(doc)
 	pwrite(doc)
 end
 
+---@param tracker Tracker
 ---@return string
-local function change_user()
-	local new_user = Todo("prompt for username");
+local function change_user(tracker)
+	local online = tracker:get_online();
+	local new_user = prompt(
+		text.setting("Choose the new user:"),
+		online,
+		colors.blue
+	);
+
 	utils.change_user(new_user);
+	tracker:change_user(new_user);
 	return new_user;
 end
 
@@ -264,11 +272,24 @@ end
 
 function ACTIONS.exit() end
 
+---@type Tracker
+local tracker;
 if not user then
-	Todo("prompt if user should be set")
-	user = change_user();
+	local answers = utils.promt_args({
+		"yes", "y",
+		"no", "n"
+	});
+	pprint(text.info("This program has no user."));
+	local answer = prompt(text.setting("Do you want to set the user for this program: (y/n)"), answers, colors.blue);
+	tracker = Tracker:new("");
+	if table.contains({ "yes", "y" }, answer:lower()) then
+		user = change_user(tracker);
+	else
+		utils.change_user("");
+	end
+else
+	tracker = Tracker:new(user);
 end
-local tracker = Tracker:new(user);
 
 local history = {};
 repeat

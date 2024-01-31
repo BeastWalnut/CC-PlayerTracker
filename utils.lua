@@ -138,8 +138,6 @@ local function load_settings()
 	-- 	});
 	-- end
 	config = settings.get(CONFIG_NAME, config);
-	--TODO: Remove hardcoded user.
-	config.user = "BeastWalnut";
 end
 
 local function save_settings()
