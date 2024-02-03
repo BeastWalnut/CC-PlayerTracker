@@ -34,51 +34,6 @@ function Clear()
 	term.setCursorPos(1, 1);
 end
 
-local config;
-local text = {};
-
----Wrap string with `primary_color`
----@param str string
----@return Doc
-function text.primary(str)
-	return pretty.text(str, config.primary_color);
-end
-
----Wrap string with `secondary_color`
----@param str string
----@return Doc
-function text.secondary(str)
-	return pretty.text(str, config.secondary_color);
-end
-
----Wrap string with `info_color`
----@param str string
----@return Doc
-function text.info(str)
-	return pretty.text(str, config.info_color);
-end
-
----Wrap string with `setting_color`
----@param str string
----@return Doc
-function text.setting(str)
-	return pretty.text(str, config.setting_color);
-end
-
----Wrap string with `red`
----@param str string
----@return Doc
-function text.error(str)
-	return pretty.text(str, colors.red);
-end
-
----Wrap string with `gray`
----@param str string
----@return Doc
-function text.gray(str)
-	return pretty.text(str, colors.gray);
-end
-
 ---Prints `text` and then prompts for some input.
 ---@param prompt_str Doc
 ---@param values? string[]
@@ -114,29 +69,28 @@ local function promt_args(values)
 	return results;
 end
 
+---@class ConfigColors
+local config_colors = {
+	primary = colors.lime,
+	secondary = colors.yellow,
+	setting = colors.purple,
+	info = colors.blue,
+};
+
 local CONFIG_NAME = "tracker";
 ---@class AppConfig
 ---@field user? string
----@field primary_color color
----@field secondary_color color
----@field setting_color color
----@field info_color color
-config = {
-	primary_color = colors.lime,
-	secondary_color = colors.yellow,
-	setting_color = colors.purple,
-	info_color = colors.blue,
-};
+---@field colors ConfigColors
+local config = { colors = config_colors, };
 
 ---Loads or defines the config file.
 local function load_settings()
-	-- if not settings.getDetails(CONFIG_NAME).description then
-	-- 	settings.define(CONFIG_NAME, {
-	-- 		description = "Config details for `tracker`",
-	-- 		type = "table",
-	-- 		default = config,
-	-- 	});
-	-- end
+	if not settings.getDetails(CONFIG_NAME).description then
+		settings.define(CONFIG_NAME, {
+			description = "Config details for `tracker`",
+			type = "table",
+		});
+	end
 	config = settings.get(CONFIG_NAME, config);
 end
 
@@ -158,6 +112,55 @@ local function get_user()
 	return config.user;
 end
 
+
+local function get_colors()
+	return config.colors;
+end
+
+local text = {};
+
+---Wrap string with `primary_color`
+---@param str string
+---@return Doc
+function text.primary(str)
+	return pretty.text(str, config.colors.primary);
+end
+
+---Wrap string with `secondary_color`
+---@param str string
+---@return Doc
+function text.secondary(str)
+	return pretty.text(str, config.colors.secondary);
+end
+
+---Wrap string with `info_color`
+---@param str string
+---@return Doc
+function text.info(str)
+	return pretty.text(str, config.colors.info);
+end
+
+---Wrap string with `setting_color`
+---@param str string
+---@return Doc
+function text.setting(str)
+	return pretty.text(str, config.colors.setting);
+end
+
+---Wrap string with `red`
+---@param str string
+---@return Doc
+function text.error(str)
+	return pretty.text(str, colors.red);
+end
+
+---Wrap string with `gray`
+---@param str string
+---@return Doc
+function text.gray(str)
+	return pretty.text(str, colors.gray);
+end
+
 return {
 	get_user = get_user,
 	change_user = change_user,
@@ -165,4 +168,5 @@ return {
 	text = text,
 	prompt = prompt,
 	promt_args = promt_args,
+	get_colors = get_colors,
 }
