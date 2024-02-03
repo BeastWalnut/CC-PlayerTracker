@@ -258,10 +258,6 @@ function ACTIONS.help()
 				text.setting("`player`")
 			),
 		},
-		{
-			name = text.error("Exit"),
-			desc = pretty.text("Exits the program"),
-		}
 	};
 
 	for _, entry in ipairs(ENTRIES) do
