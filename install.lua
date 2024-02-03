@@ -35,6 +35,7 @@ local function github_get(repo, folder)
 				if file then
 					file.write(file_response.readAll() or "");
 					file.close();
+					print("Succesfully installed: " .. path);
 				else
 					print("Could not edit file: " .. path);
 				end
