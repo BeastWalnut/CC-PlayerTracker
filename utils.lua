@@ -161,6 +161,55 @@ function text.gray(str)
 	return pretty.text(str, colors.gray);
 end
 
+---@generic T
+---@param arr `T`[][]
+---@param rotations integer
+---@return `T`[][]
+local function rotate2d(arr, rotations)
+	---@type `T`[][]
+	local result = {};
+
+	rotations = rotations % 4;
+
+	for _, row in ipairs(arr) do
+		local new_row = {};
+		---@diagnostic disable-next-line: no-unknown
+		for _, v in ipairs(row) do
+			table.insert(new_row, v);
+		end
+		table.insert(result, new_row);
+	end
+
+	for _ = 1, rotations do
+		---@type `T`[][]
+		local rotated = {};
+		for x, row in ipairs(result) do
+			---@diagnostic disable-next-line: no-unknown
+			for y, v in ipairs(row) do
+				rotated[y] = rotated[y] or {};
+				local idx = (#row - x) + 1;
+				rotated[y][idx] = v;
+			end
+		end
+		result = rotated;
+	end
+
+	return result
+end
+
+---@param arr string[][]
+---@return string
+local function concat2d(arr)
+	local result = {};
+
+	for _, row in ipairs(arr) do
+		local line = table.concat(row);
+		table.insert(result, line);
+	end
+
+	return table.concat(result, "\n")
+end
+
 return {
 	get_user = get_user,
 	change_user = change_user,
@@ -169,4 +218,6 @@ return {
 	prompt = prompt,
 	promt_args = promt_args,
 	get_colors = get_colors,
+	rotate2d = rotate2d,
+	concat2d = concat2d,
 }

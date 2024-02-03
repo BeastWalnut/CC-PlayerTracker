@@ -60,7 +60,47 @@ local function print_pos(position)
 		pprint(text.primary(" blocks away."));
 	end
 	if position.direction then
-		--TODO: Todo("Print `direction`");
+		local direction = math.round(position.direction / 45);
+
+		local c = utils.get_colors();
+		local hi = colors.toBlit(c.info); -- High
+		local lo = colors.toBlit(colors.gray);             -- Low
+		local e = " ";              -- Empty
+
+		---@type string[][]
+		local direction_arr = {
+			{},
+			{},
+			{ e,  e,  e, e, e,  e,  e,  e, e, e,  e },
+			{ e,  e,  e, e, e,  e,  e,  e, e, e,  e },
+			{ e,  lo, e, e, e,  e,  e,  e, e, lo, e },
+			{ lo, lo, e, e, e,  e,  e,  e, e, lo, lo },
+			{ e,  lo, e, e, e,  e,  e,  e, e, lo, e },
+			{ e,  e,  e, e, e,  e,  e,  e, e, e,  e },
+			{ e,  e,  e, e, e,  e,  e,  e, e, e,  e },
+			{ lo, e,  e, e, lo, lo, lo, e, e, e,  lo },
+			{ lo, lo, e, e, e,  lo, e,  e, e, lo, lo },
+		};
+		if (direction % 2) == 0 then
+			direction_arr[1] = { lo, lo, e, e, e, hi, e, e, e, lo, lo };
+			direction_arr[2] = { lo, e, e, e, hi, hi, hi, e, e, e, lo };
+			direction = direction / 2;
+		else
+			direction_arr[1] = { lo, lo, e, e, e, lo, e, e, e, hi, hi };
+			direction_arr[2] = { lo, e, e, e, lo, lo, lo, e, e, e, hi };
+			direction = (direction - 1) / 2;
+		end
+		if direction < 0 then
+			direction = direction + 4;
+		end
+
+		local rotated = utils.rotate2d(direction_arr, direction);
+
+		local w, _ = term.getSize();
+		local _, y = term.getCursorPos();
+		local image = paintutils.parseImage(utils.concat2d(rotated));
+		paintutils.drawImage(image, math.round((w - 10) / 2), y);
+		term.setBackgroundColor(colors.black);
 	end
 end
 
