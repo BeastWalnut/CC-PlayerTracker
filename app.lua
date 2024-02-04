@@ -314,23 +314,20 @@ end
 
 function ACTIONS.exit() end
 
----@type Tracker
-local tracker;
+local tracker = Tracker:new(user or "");
 if not user then
-	local answers = utils.prompt_args({
-		"yes", "y",
-		"no", "n"
-	});
 	pprint(text.info("This program has no user."));
-	local answer = prompt(text.setting("Do you want to set the user for this program: (y/n)"), answers, colors.blue);
-	tracker = Tracker:new("");
-	if table.contains({ "yes", "y" }, answer:lower()) then
+
+	local answer = prompt(
+		text.setting("Do you want to set the user for this program: (y/n)"),
+		utils.prompt_args({ "Yes", "Y", "No", "N" }),
+		colors.blue
+	):lower();
+	if table.contains({ "yes", "y" }, answer) then
 		user = change_user(tracker);
 	else
 		utils.change_user("");
 	end
-else
-	tracker = Tracker:new(user);
 end
 
 local history = {};
