@@ -26,11 +26,12 @@ end
 ---@param tracker Tracker
 ---@return string
 local function change_user(tracker)
+	local c = utils.get_colors();
 	local online = tracker:get_online();
 	local new_user = prompt(
 		text.setting("Choose the new user:"),
 		online,
-		colors.blue
+		c.info
 	);
 
 	utils.change_user(new_user);
@@ -64,8 +65,8 @@ local function print_pos(position)
 
 		local c = utils.get_colors();
 		local hi = colors.toBlit(c.info); -- High
-		local lo = colors.toBlit(colors.gray);             -- Low
-		local e = " ";              -- Empty
+		local lo = colors.toBlit(colors.gray); -- Low
+		local e = " ";                   -- Empty
 
 		---@type string[][]
 		local direction_arr = {
@@ -316,7 +317,7 @@ function ACTIONS.exit() end
 ---@type Tracker
 local tracker;
 if not user then
-	local answers = utils.promt_args({
+	local answers = utils.prompt_args({
 		"yes", "y",
 		"no", "n"
 	});

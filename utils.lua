@@ -216,7 +216,7 @@ return {
 	load_config = load_settings,
 	text = text,
 	prompt = prompt,
-	promt_args = promt_args,
+	prompt_args = promt_args,
 	get_colors = get_colors,
 	rotate2d = rotate2d,
 	concat2d = concat2d,
