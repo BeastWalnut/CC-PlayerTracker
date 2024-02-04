@@ -78,7 +78,7 @@ end
 ---@param user PlayerPos
 ---@param target PlayerPos
 ---@return number? dist
----@return number? delta-x 
+---@return number? delta-x
 ---@return number? delta-z
 function Tracker.get_distance(user, target)
 	if user.dimension ~= target.dimension then return; end
@@ -105,9 +105,6 @@ end
 ---Get the coordinates of `user`
 ---@return PlayerPos | nil
 function Tracker:user_pos()
-	if self.user == "gps" then
-		return Todo("Get position from gps");
-	end
 	return self:find(self.user);
 end
 
