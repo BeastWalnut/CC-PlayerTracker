@@ -36,18 +36,27 @@ local function key_wait(time)
 end
 
 ---@param tracker Tracker
+---@param rest? string
 ---@return string
-local function change_user(tracker)
-	local c = utils.get_colors();
-	local online = tracker:get_online();
-	local new_user = prompt(
-		text.setting("Choose the new user:"),
-		online,
-		c.info
-	);
+local function change_user(tracker, rest)
+	local new_user; ---@type string
+	if rest then
+		new_user = rest:match("(%S+).*");
+	else
+		local c = utils.get_colors();
+		local online = tracker:get_online();
+		new_user = prompt(
+			text.setting("Choose the new user:"),
+			online,
+			c.info
+		);
+	end
 
 	utils.change_user(new_user);
 	tracker:change_user(new_user);
+	pwrite(text.info("Successfully changed user to: "));
+	pprint(text.setting("`" .. new_user .. "`"));
+	key_wait(2);
 	return new_user;
 end
 
@@ -141,28 +150,34 @@ local ACTION_NAMES = {
 	"locate", "stalk",
 };
 
----@type { [string]: fun(tracker: Tracker) }
+---@type { [string]: fun(tracker: Tracker, rest: string?) }
 local ACTIONS = {};
 function ACTIONS.unknown()
 	pprint(text.error("Unknown action."));
 	pprint(pretty.concat(
 		text.info("Use"),
-		text.setting(" Help "),
+		text.setting(" `Help` "),
 		text.info("to get the known commands.")
 	));
 	print_last(text.secondary("Press any key to continue."));
 	os.pullEvent("key");
 end
 
-function ACTIONS.find(tracker)
-	local online = tracker:get_online();
-	table.insert(online, "Nearest");
-	table.insert(online, "nearest");
-	local target = prompt(
-		text.secondary("Choose player to find:"),
-		online,
-		colors.red
-	);
+function ACTIONS.find(tracker, rest)
+	local target; ---@type string
+	if rest then
+		target = rest:match("(%S+).*");
+	end
+	if not target then
+		local online = tracker:get_online();
+		table.insert(online, "Nearest");
+		table.insert(online, "nearest");
+		target = prompt(
+			text.secondary("Choose player to find:"),
+			online,
+			colors.red
+		);
+	end
 
 	if target:lower() == "nearest" then
 		target = tracker:get_nearest();
@@ -184,12 +199,13 @@ function ACTIONS.find(tracker)
 
 			os.pullEvent("key");
 			return;
-		elseif tracker:is_online(target) then
-			pwrite(text.info(target));
-			pprint(text.error(" is in another dimension."));
 		else
-			pwrite(text.info(target));
-			pprint(text.error(" is offline."));
+			pwrite(text.info("`" .. target .. "`"));
+			if tracker:is_online(target) then
+				pprint(text.error(" is in another dimension."));
+			else
+				pprint(text.error(" is offline."));
+			end
 		end
 	end
 
@@ -198,15 +214,21 @@ end
 
 ACTIONS.locate = ACTIONS.find;
 
-function ACTIONS.track(tracker)
-	local online = tracker:get_online();
-	table.insert(online, "Nearest");
-	table.insert(online, "nearest");
-	local target = prompt(
-		text.secondary("Choose player to find:"),
-		online,
-		colors.red
-	);
+function ACTIONS.track(tracker, rest)
+	local target; ---@type string
+	if rest then
+		target = rest:match("(%S+).*");
+	end
+	if not target then
+		local online = tracker:get_online();
+		table.insert(online, "Nearest");
+		table.insert(online, "nearest");
+		target = prompt(
+			text.secondary("Choose player to find:"),
+			online,
+			colors.red
+		);
+	end
 	local enabled = true;
 
 	local find_nearest = target:lower() == "nearest";
@@ -219,7 +241,7 @@ function ACTIONS.track(tracker)
 		pprint(text.error("  Idiot forgot to write a name."));
 		enabled = false;
 	elseif not tracker:is_online(target) then
-		pwrite(text.info(target));
+		pwrite(text.info("`" .. target .. "`"));
 		pprint(text.error(" is offline."));
 		enabled = false;
 	end
@@ -235,15 +257,19 @@ function ACTIONS.track(tracker)
 				pwrite(text.secondary("Tracking: "));
 				pprint(text.info(target .. "\n"));
 				print_pos(target_pos);
-			elseif tracker:is_online(target) then
-				pwrite(text.info(target));
-				pprint(text.error(" is in another dimension."));
 			else
-				pwrite(text.info(target));
-				pprint(text.error(" logged off."));
+				pwrite(text.info("`" .. target .. "`"));
+				if tracker:is_online(target) then
+					pprint(text.error(" is in another dimension."));
+				else
+					pprint(text.error(" logged off."));
+				end
 			end
 		elseif find_nearest then
-			pprint(text.error("  No players in this dimension."));
+			local w, h = term.getSize();
+			local str = "No players in this dimension";
+			term.setCursorPos(math.round((w - #str) / 2), math.round(h / 2));
+			pprint(text.error(str));
 		end
 
 		if key_wait(3) then return; end
@@ -254,33 +280,31 @@ end
 
 ACTIONS.stalk = ACTIONS.track;
 
-function ACTIONS.user(tracker)
-	user = change_user(tracker);
+function ACTIONS.user(tracker, rest)
+	user = change_user(tracker, rest);
 end
 
-function ACTIONS.help()
-	Clear();
-
+function ACTIONS.help(_, rest)
 	local ENTRIES = {
-		{
+		help = {
 			name = text.info("Help"),
 			desc = pretty.text("Prints this message"),
 		},
-		{
+		find = {
 			name = text.info("Find"),
 			desc = pretty.concat(
 				pretty.text("Finds and prints the coords of "),
 				text.setting("`player`")
 			),
 		},
-		{
+		track = {
 			name = text.info("Track"),
 			desc = pretty.concat(
 				pretty.text("Continuously finds and prints the coords of "),
 				text.setting("`player`")
 			),
 		},
-		{
+		nearest = {
 			name = text.primary("Nearest"),
 			desc = pretty.concat(
 				pretty.text("Use instead of "),
@@ -288,11 +312,11 @@ function ACTIONS.help()
 				pretty.text(" to find the nearest one instead")
 			),
 		},
-		{
+		nick = {
 			name = text.info("Nick"),
 			desc = text.error("Not yet implemented"),
 		},
-		{
+		user = {
 			name = text.info("User"),
 			desc = pretty.concat(
 				pretty.text("Use to change the user of the program to "),
@@ -301,11 +325,30 @@ function ACTIONS.help()
 		},
 	};
 
-	for _, entry in ipairs(ENTRIES) do
+	---@param name string
+	local function print_entry(name)
+		local entry = ENTRIES[name];
 		pwrite(entry.name);
 		pwrite(text.secondary("->"));
 		pprint(entry.desc);
 		print("");
+	end
+
+	if rest then
+		---@type string
+		local name = rest:match("(%S+)");
+		if ENTRIES[name:lower()] then
+			print_entry(name:lower());
+		else
+			pwrite(text.error("Unknown entry: "));
+			pprint(text.info("`" .. name .. "`"));
+		end
+	else
+		Clear();
+
+		for name, _ in pairs(ENTRIES) do
+			print_entry(name);
+		end
 	end
 
 	print_last(text.secondary("Press any key to continue."));
@@ -334,20 +377,22 @@ local history = {};
 repeat
 	Clear();
 	print_online(tracker);
-	local action = string.lower(
-		prompt(
-			text.secondary("Choose an action: "),
-			utils.prompt_args(ACTION_NAMES),
-			colors.gray,
-			history
-		)
+	local answer = prompt(
+		text.secondary("Choose an action: "),
+		utils.prompt_args(ACTION_NAMES),
+		colors.gray,
+		history
 	);
+	local action, rest = answer:match("(%S*)%s*(%S*)");
+	if rest == "" then
+		rest = nil
+	end
 
-	if ACTIONS[action] then
+	if ACTIONS[action:lower()] then
 		table.insert(history, action);
-		ACTIONS[action](tracker);
+		ACTIONS[action:lower()](tracker, rest);
 	else
-		ACTIONS.unknown(tracker);
+		ACTIONS.unknown(tracker, rest);
 	end
 until action == "exit";
 
