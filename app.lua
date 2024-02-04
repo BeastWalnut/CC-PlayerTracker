@@ -340,7 +340,7 @@ repeat
 	local action = string.lower(
 		prompt(
 			text.secondary("Choose an action: "),
-			utils.promt_args(ACTION_NAMES),
+			utils.prompt_args(ACTION_NAMES),
 			colors.gray,
 			history
 		)
