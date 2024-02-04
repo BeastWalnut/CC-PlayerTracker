@@ -14,3 +14,6 @@ If you want it to run on start then you can add this to startup.lua.
 ```lua
 shell.run(".tracker/app.lua")
 ```
+
+# Updating
+The installer automatically updates itself into `.tracker/install.lua` and you can use that as an update script
