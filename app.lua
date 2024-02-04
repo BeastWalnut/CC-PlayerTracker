@@ -23,6 +23,18 @@ local function print_last(doc)
 	pwrite(doc)
 end
 
+---@param time number
+---@return boolean
+local function key_wait(time)
+	print_last(text.secondary("Press any key to continue."))
+	local timer_id = os.startTimer(time);
+	repeat
+		local event, id = os.pullEvent();
+		if event == "key" then return true; end
+	until id == timer_id
+	return false;
+end
+
 ---@param tracker Tracker
 ---@return string
 local function change_user(tracker)
@@ -183,12 +195,7 @@ function ACTIONS.find(tracker)
 		end
 	end
 
-	print_last(text.secondary("Press any key to continue."))
-	local timer_id = os.startTimer(2);
-	repeat
-		local event, id = os.pullEvent();
-		if event == "key" then break; end
-	until id == timer_id
+	key_wait(2);
 end
 
 ACTIONS.locate = ACTIONS.find;
@@ -241,12 +248,7 @@ function ACTIONS.track(tracker)
 			pprint(text.error("  No players in this dimension."))
 		end
 
-		print_last(text.secondary("Press any key to continue."))
-		local timer_id = os.startTimer(3);
-		repeat
-			local event, id = os.pullEvent();
-			if event == "key" then return; end
-		until id == timer_id
+		if key_wait(3) then return; end
 	end
 	print_last(text.secondary("Press any key to continue."))
 	os.pullEvent("key");
