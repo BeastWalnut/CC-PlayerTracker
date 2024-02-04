@@ -163,7 +163,6 @@ function ACTIONS.find(tracker)
 		online,
 		colors.red
 	);
-	local enabled = true;
 
 	if target:lower() == "nearest" then
 		target = tracker:get_nearest();
@@ -171,10 +170,9 @@ function ACTIONS.find(tracker)
 
 	if not target then
 		pprint(text.error("  No players in this dimension."));
-		enabled = false;
 	elseif not target:find("%S") then
 		pprint(text.error("  Idiot forgot to write a name."));
-	elseif enabled then
+	else
 		local target_pos = tracker:relative_find(target);
 		if target_pos then
 			Clear();
@@ -182,16 +180,16 @@ function ACTIONS.find(tracker)
 			pprint(text.secondary(" Is at:\n"));
 			print_pos(target_pos);
 
-			print_last(text.secondary("Press any key to continue."))
+			print_last(text.secondary("Press any key to continue."));
 
 			os.pullEvent("key");
 			return;
 		elseif tracker:is_online(target) then
 			pwrite(text.info(target));
-			pprint(text.error(" is in another dimension."))
+			pprint(text.error(" is in another dimension."));
 		else
 			pwrite(text.info(target));
-			pprint(text.error(" is offline."))
+			pprint(text.error(" is offline."));
 		end
 	end
 
@@ -222,7 +220,7 @@ function ACTIONS.track(tracker)
 		enabled = false;
 	elseif not tracker:is_online(target) then
 		pwrite(text.info(target));
-		pprint(text.error(" is offline."))
+		pprint(text.error(" is offline."));
 		enabled = false;
 	end
 
@@ -239,18 +237,18 @@ function ACTIONS.track(tracker)
 				print_pos(target_pos);
 			elseif tracker:is_online(target) then
 				pwrite(text.info(target));
-				pprint(text.error(" is in another dimension."))
+				pprint(text.error(" is in another dimension."));
 			else
 				pwrite(text.info(target));
-				pprint(text.error(" logged off."))
+				pprint(text.error(" logged off."));
 			end
 		elseif find_nearest then
-			pprint(text.error("  No players in this dimension."))
+			pprint(text.error("  No players in this dimension."));
 		end
 
 		if key_wait(3) then return; end
 	end
-	print_last(text.secondary("Press any key to continue."))
+	print_last(text.secondary("Press any key to continue."));
 	os.pullEvent("key");
 end
 
@@ -307,7 +305,7 @@ function ACTIONS.help()
 		pwrite(entry.name);
 		pwrite(text.secondary("->"));
 		pprint(entry.desc);
-		print("")
+		print("");
 	end
 
 	print_last(text.secondary("Press any key to continue."));
