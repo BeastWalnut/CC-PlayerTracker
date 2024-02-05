@@ -157,7 +157,7 @@ function ACTIONS.unknown()
 	pprint(pretty.concat(
 		text.info("Use"),
 		text.setting(" `Help` "),
-		text.info("to get the known commands.")
+		text.info("to get the list of commands.")
 	));
 	print_last(text.secondary("Press any key to continue."));
 	os.pullEvent("key");
