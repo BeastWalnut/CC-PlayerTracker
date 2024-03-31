@@ -27,6 +27,22 @@ function Todo(str)
 	error(err_msg, 2)
 end
 
+---Extends `dest` with the contents of `src` replacing existing values
+---@param dest table
+---@param src table
+---@return table
+local function tbl_extend(dest, src)
+	for k, v in pairs(src) do
+		if type(v) == "table" and type(dest[k]) == "table" then
+			tbl_extend(dest[k], v)
+		else
+			dest[k] = v
+		end
+	end
+
+	return dest
+end
+
 ---Clears the screen.
 function Clear()
 	term.clear()
@@ -82,7 +98,8 @@ local CONFIG_NAME = "tracker"
 ---@class AppConfig
 ---@field user? string
 ---@field colors ConfigColors
-local config = { colors = config_colors }
+---@field nicks { [string]: string }
+local config = { colors = config_colors, nicks = {} }
 
 ---Loads or defines the config file.
 local function load_settings()
@@ -92,7 +109,7 @@ local function load_settings()
 			type = "table",
 		})
 	end
-	config = settings.get(CONFIG_NAME, config)
+	tbl_extend(config, settings.get(CONFIG_NAME))
 end
 
 local function save_settings()
@@ -111,6 +128,21 @@ end
 ---@return string | nil
 local function get_user()
 	return config.user
+end
+
+---Registers the provided nick
+---@param nick string
+---@param value string?
+local function change_nick(nick, value)
+	config.nicks[nick] = value
+	save_settings()
+end
+
+---Returns the player associated with `nick`
+---@param nick string
+---@return string?
+local function get_nick(nick)
+	return config.nicks[nick]
 end
 
 local function get_colors()
@@ -213,6 +245,8 @@ end
 return {
 	get_user = get_user,
 	change_user = change_user,
+	get_nick = get_nick,
+	change_nick = change_nick,
 	load_config = load_settings,
 	text = text,
 	prompt = prompt,
