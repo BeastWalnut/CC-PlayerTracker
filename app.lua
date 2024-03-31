@@ -4,11 +4,57 @@ local pwrite = pretty.write
 
 local Tracker = require("api")
 local utils = require("utils")
-local text = utils.text
+local config = require("config")
+-- local text = utils.text
 local prompt = utils.prompt
 
-utils.load_config()
-local user = utils.get_user()
+config.load()
+local user = config.user.get()
+local c = config.colors()
+
+local text = {}
+
+---Wrap string with `primary_color`
+---@param str string
+---@return Doc
+function text.primary(str)
+	return pretty.text(str, c.primary)
+end
+
+---Wrap string with `secondary_color`
+---@param str string
+---@return Doc
+function text.secondary(str)
+	return pretty.text(str, c.secondary)
+end
+
+---Wrap string with `info_color`
+---@param str string
+---@return Doc
+function text.info(str)
+	return pretty.text(str, c.info)
+end
+
+---Wrap string with `setting_color`
+---@param str string
+---@return Doc
+function text.setting(str)
+	return pretty.text(str, c.setting)
+end
+
+---Wrap string with `red`
+---@param str string
+---@return Doc
+function text.error(str)
+	return pretty.text(str, colors.red)
+end
+
+---Wrap string with `gray`
+---@param str string
+---@return Doc
+function text.gray(str)
+	return pretty.text(str, colors.gray)
+end
 
 local DIMENSIONS = {
 	["minecraft:overworld"] = "Overworld",
@@ -51,21 +97,24 @@ end
 ---@param rest? string
 ---@return string
 local function change_user(tracker, rest)
-	local new_user ---@type string
+	local username ---@type string
 	if rest then
-		new_user = split_ws(rest)
+		username = split_ws(rest)
 	else
-		local c = utils.get_colors()
 		local online = tracker:get_online()
-		new_user = prompt(text.setting("Choose the new user:"), online, c.info)
+		username = prompt(text.setting("Choose the new user:"), online, c.info)
 	end
 
-	utils.change_user(new_user)
-	tracker:change_user(new_user)
-	pwrite(text.info("Successfully changed user to: "))
-	pprint(text.setting("`" .. new_user .. "`"))
+	config.user.change(username)
+	if not username:find("%S") then
+		pwrite(text.info("Successfully unset user."))
+	else
+		pwrite(text.info("Successfully changed user to: "))
+		pprint(text.setting("`" .. username .. "`"))
+	end
+	tracker:change_user(username)
 	key_wait(2)
-	return new_user
+	return username
 end
 
 ---Pretty prints `postion`.
@@ -92,7 +141,6 @@ local function print_pos(position)
 	if position.direction then
 		local direction = math.round(position.direction / 45)
 
-		local c = utils.get_colors()
 		local hi = colors.toBlit(c.info) -- High
 		local lo = colors.toBlit(colors.gray) -- Low
 		local e = " "                   -- Empty
@@ -353,7 +401,7 @@ if not user then
 	if table.contains({ "yes", "y" }, answer) then
 		user = change_user(tracker)
 	else
-		utils.change_user("")
+		config.user.change("")
 	end
 end
 
@@ -373,10 +421,10 @@ repeat
 until action == "exit"
 
 Clear()
-local c = term.getTextColor()
+local tc = term.getTextColor()
 term.setTextColor(colors.red)
 
 write(("Exiting %s"):format(arg[0]))
 textutils.slowPrint("...", 5)
 
-term.setTextColor(c)
+term.setTextColor(tc)
