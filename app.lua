@@ -16,6 +16,16 @@ local DIMENSIONS = {
 	["minecraft:the_end"] = "The End",
 }
 
+---@param str string
+---@return string, string?
+local function split_ws(str)
+	local start, rest = str:match("(%S+)%s*(%S*)")
+	if rest == "" then
+		rest = nil
+	end
+	return start, rest
+end
+
 ---@param doc Doc
 local function print_last(doc)
 	local _, h = term.getSize()
@@ -43,7 +53,7 @@ end
 local function change_user(tracker, rest)
 	local new_user ---@type string
 	if rest then
-		new_user = rest:match("(%S+).*")
+		new_user = split_ws(rest)
 	else
 		local c = utils.get_colors()
 		local online = tracker:get_online()
@@ -85,21 +95,21 @@ local function print_pos(position)
 		local c = utils.get_colors()
 		local hi = colors.toBlit(c.info) -- High
 		local lo = colors.toBlit(colors.gray) -- Low
-		local e = " " -- Empty
+		local e = " "                   -- Empty
 
 		---@type string[][]
 		local direction_arr = {
 			{},
 			{},
-			{ e, e, e, e, e, e, e, e, e, e, e },
-			{ e, e, e, e, e, e, e, e, e, e, e },
-			{ e, lo, e, e, e, e, e, e, e, lo, e },
-			{ lo, lo, e, e, e, e, e, e, e, lo, lo },
-			{ e, lo, e, e, e, e, e, e, e, lo, e },
-			{ e, e, e, e, e, e, e, e, e, e, e },
-			{ e, e, e, e, e, e, e, e, e, e, e },
-			{ lo, e, e, e, lo, lo, lo, e, e, e, lo },
-			{ lo, lo, e, e, e, lo, e, e, e, lo, lo },
+			{ e,  e,  e, e, e,  e,  e,  e, e, e,  e },
+			{ e,  e,  e, e, e,  e,  e,  e, e, e,  e },
+			{ e,  lo, e, e, e,  e,  e,  e, e, lo, e },
+			{ lo, lo, e, e, e,  e,  e,  e, e, lo, lo },
+			{ e,  lo, e, e, e,  e,  e,  e, e, lo, e },
+			{ e,  e,  e, e, e,  e,  e,  e, e, e,  e },
+			{ e,  e,  e, e, e,  e,  e,  e, e, e,  e },
+			{ lo, e,  e, e, lo, lo, lo, e, e, e,  lo },
+			{ lo, lo, e, e, e,  lo, e,  e, e, lo, lo },
 		}
 		if (direction % 2) == 0 then
 			direction_arr[1] = { lo, lo, e, e, e, hi, e, e, e, lo, lo }
@@ -160,11 +170,10 @@ function ACTIONS.unknown()
 end
 
 function ACTIONS.find(tracker, rest)
-	local target ---@type string
+	local target ---@type string?
 	if rest then
-		target = rest:match("(%S+).*")
-	end
-	if not target then
+		target = split_ws(rest)
+	else
 		local online = tracker:get_online()
 		table.insert(online, "Nearest")
 		table.insert(online, "nearest")
@@ -207,11 +216,10 @@ end
 ACTIONS.locate = ACTIONS.find
 
 function ACTIONS.track(tracker, rest)
-	local target ---@type string
+	local target ---@type string?
 	if rest then
-		target = rest:match("(%S+).*")
-	end
-	if not target then
+		target = split_ws(rest)
+	else
 		local online = tracker:get_online()
 		table.insert(online, "Nearest")
 		table.insert(online, "nearest")
@@ -253,7 +261,7 @@ function ACTIONS.track(tracker, rest)
 					pprint(text.error(" logged off."))
 				end
 			end
-		elseif find_nearest then
+		else
 			local w, h = term.getSize()
 			local str = "No players in this dimension"
 			term.setCursorPos(math.round((w - #str) / 2), math.round(h / 2))
@@ -312,8 +320,7 @@ function ACTIONS.help(_, rest)
 	end
 
 	if rest then
-		---@type string
-		local name = rest:match("(%S+)")
+		local name = split_ws(rest)
 		if ENTRIES[name:lower()] then
 			print_entry(name:lower())
 		else
@@ -355,10 +362,7 @@ repeat
 	Clear()
 	print_online(tracker)
 	local answer = prompt(text.secondary("Choose an action: "), utils.prompt_args(ACTION_NAMES), colors.gray, history)
-	local action, rest = answer:match("(%S*)%s*(%S*)")
-	if rest == "" then
-		rest = nil
-	end
+	local action, rest = split_ws(answer)
 
 	if ACTIONS[action:lower()] then
 		table.insert(history, action)
