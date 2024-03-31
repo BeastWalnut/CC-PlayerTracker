@@ -85,21 +85,21 @@ local function print_pos(position)
 		local c = utils.get_colors()
 		local hi = colors.toBlit(c.info) -- High
 		local lo = colors.toBlit(colors.gray) -- Low
-		local e = " "                   -- Empty
+		local e = " " -- Empty
 
 		---@type string[][]
 		local direction_arr = {
 			{},
 			{},
-			{ e,  e,  e, e, e,  e,  e,  e, e, e,  e },
-			{ e,  e,  e, e, e,  e,  e,  e, e, e,  e },
-			{ e,  lo, e, e, e,  e,  e,  e, e, lo, e },
-			{ lo, lo, e, e, e,  e,  e,  e, e, lo, lo },
-			{ e,  lo, e, e, e,  e,  e,  e, e, lo, e },
-			{ e,  e,  e, e, e,  e,  e,  e, e, e,  e },
-			{ e,  e,  e, e, e,  e,  e,  e, e, e,  e },
-			{ lo, e,  e, e, lo, lo, lo, e, e, e,  lo },
-			{ lo, lo, e, e, e,  lo, e,  e, e, lo, lo },
+			{ e, e, e, e, e, e, e, e, e, e, e },
+			{ e, e, e, e, e, e, e, e, e, e, e },
+			{ e, lo, e, e, e, e, e, e, e, lo, e },
+			{ lo, lo, e, e, e, e, e, e, e, lo, lo },
+			{ e, lo, e, e, e, e, e, e, e, lo, e },
+			{ e, e, e, e, e, e, e, e, e, e, e },
+			{ e, e, e, e, e, e, e, e, e, e, e },
+			{ lo, e, e, e, lo, lo, lo, e, e, e, lo },
+			{ lo, lo, e, e, e, lo, e, e, e, lo, lo },
 		}
 		if (direction % 2) == 0 then
 			direction_arr[1] = { lo, lo, e, e, e, hi, e, e, e, lo, lo }
