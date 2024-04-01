@@ -4,6 +4,7 @@ local pwrite = pretty.write
 
 local Tracker = require("api")
 local utils = require("utils")
+---@type AppConfig
 local config = require("config")
 -- local text = utils.text
 local prompt = utils.prompt
@@ -65,11 +66,27 @@ local DIMENSIONS = {
 ---@param str string
 ---@return string, string?
 local function split_ws(str)
-	local start, rest = str:match("(%S+)%s*(%S*)")
+	local start, rest = str:match("(%S+)%s*(.*)")
 	if rest == "" then
 		rest = nil
 	end
 	return start, rest
+end
+
+---@param rest string?
+---@param prompt_str Doc
+---@param values? string[] | fun(): string[]
+---@param color? color
+---@param history? string[]
+---@param repl? string
+---@param default? string
+---@return string, string?
+local function rest_or_prompt(rest, prompt_str, values, color, history, repl, default)
+	if rest then
+		return split_ws(rest)
+	else
+		return prompt(prompt_str, values, color, history, repl, default)
+	end
 end
 
 ---@param doc Doc
@@ -97,13 +114,10 @@ end
 ---@param rest? string
 ---@return string
 local function change_user(tracker, rest)
-	local username ---@type string
-	if rest then
-		username = split_ws(rest)
-	else
-		local online = tracker:get_online()
-		username = prompt(text.setting("Choose the new user:"), online, c.info)
-	end
+	local username
+	username, rest = rest_or_prompt(rest, text.setting("Choose the new user:"), function()
+		return tracker:get_online()
+	end, c.info)
 
 	config.user.change(username)
 	if not username:find("%S") then
@@ -204,6 +218,7 @@ local ACTION_NAMES = {
 	"find",
 	"track",
 	"user",
+	"nick",
 	"help",
 	"exit",
 
@@ -222,14 +237,12 @@ end
 
 function ACTIONS.find(tracker, rest)
 	local target ---@type string?
-	if rest then
-		target = split_ws(rest)
-	else
+	target = rest_or_prompt(rest, text.secondary("Choose player to find:"), function()
 		local online = tracker:get_online()
 		table.insert(online, "Nearest")
 		table.insert(online, "nearest")
-		target = prompt(text.secondary("Choose player to find:"), online, colors.red)
-	end
+		return online
+	end, colors.red)
 
 	if target:lower() == "nearest" then
 		target = tracker:get_nearest()
@@ -268,14 +281,12 @@ ACTIONS.locate = ACTIONS.find
 
 function ACTIONS.track(tracker, rest)
 	local target ---@type string?
-	if rest then
-		target = split_ws(rest)
-	else
+	target = rest_or_prompt(rest, text.secondary("Choose player to find:"), function()
 		local online = tracker:get_online()
 		table.insert(online, "Nearest")
 		table.insert(online, "nearest")
-		target = prompt(text.secondary("Choose player to find:"), online, colors.red)
-	end
+		return online
+	end, colors.red)
 	local enabled = true
 
 	local find_nearest = target:lower() == "nearest"
@@ -333,6 +344,94 @@ function ACTIONS.user(tracker, rest)
 	user = change_user(tracker, rest)
 end
 
+---@param nick string
+---@param username string?
+local function set_nick(nick, username)
+	config.nicks.change(nick, username)
+	key_wait(2)
+end
+
+function ACTIONS.nick(tracker, rest)
+	local subcommands = { "add", "change", "get", "remove", "help" }
+	local action
+	action, rest = rest_or_prompt(rest, text.secondary("Select a subcommand"), subcommands, colors.gray)
+
+	if action == "help" then
+		local ENTRIES = {
+			help = {
+				name = text.info("Help"),
+				desc = pretty.text("Prints this message"),
+			},
+			add = {
+				name = text.info("Add/Change"),
+				desc = pretty.concat(pretty.text("Changes the username associated with "), text.setting("`nick`")),
+			},
+			remove = {
+				name = text.error("Remove"),
+				desc = pretty.concat(pretty.text("Removes the username associated with "), text.setting("`nick`")),
+			},
+			get = {
+				name = text.info("Get"),
+				desc = pretty.concat(pretty.text("Prints the username associated with "), text.setting("`nick`")),
+			},
+		}
+		ENTRIES.change = ENTRIES.add
+
+		---@param name string
+		local function print_entry(name)
+			local entry = ENTRIES[name]
+			pwrite(entry.name)
+			pwrite(text.secondary("->"))
+			pprint(entry.desc)
+			print("")
+		end
+
+		if rest then
+			local name = split_ws(rest)
+			if ENTRIES[name:lower()] then
+				print_entry(name:lower())
+			else
+				pwrite(text.error("Unknown entry: "))
+				pprint(text.info("`" .. name .. "`"))
+			end
+		else
+			Clear()
+
+			ENTRIES.change = nil
+			for name, _ in pairs(ENTRIES) do
+				print_entry(name)
+			end
+		end
+
+		while not key_wait(1) do
+		end
+		return
+	elseif not table.contains(subcommands, action) then
+		if rest then
+			local username = split_ws(rest)
+			set_nick(action, username)
+		else
+			set_nick(action, nil)
+		end
+		return
+	end
+	if table.contains({ "add", "change" }, action) then
+		local nick
+		nick, rest = rest_or_prompt(rest, text.setting("Nickname to add/change:"), config.nicks.all, colors.blue)
+		local username =
+			rest_or_prompt(rest, text.setting("Select a username for this nick:"), tracker:get_online(), colors.blue)
+		set_nick(nick, username)
+	elseif action == "get" then
+		local nick = rest_or_prompt(rest, text.secondary("Select username to get:"), config.nicks.all, colors.gray)
+		pwrite(text.setting("`" .. nick .. "`"))
+		pwrite(text.primary(" is set to: "))
+		pprint(text.info(tostring(config.nicks.get(nick))))
+		key_wait(2)
+	elseif action == "remove" then
+		set_nick(rest_or_prompt(rest, text.setting("Select nick to remove"), config.nicks.all(), colors.red), nil)
+	end
+end
+
 function ACTIONS.help(_, rest)
 	local ENTRIES = {
 		help = {
@@ -358,6 +457,10 @@ function ACTIONS.help(_, rest)
 		user = {
 			name = text.info("User"),
 			desc = pretty.concat(pretty.text("Use to change the user of the program to "), text.setting("`player`")),
+		},
+		nick = {
+			name = text.info("Nick"),
+			desc = pretty.text("Use to add username shortcuts"),
 		},
 	}
 
@@ -386,8 +489,8 @@ function ACTIONS.help(_, rest)
 		end
 	end
 
-	print_last(text.secondary("Press any key to continue."))
-	os.pullEvent("key")
+	while not key_wait(1) do
+	end
 end
 
 function ACTIONS.exit() end
@@ -421,7 +524,7 @@ repeat
 	else
 		ACTIONS.unknown(tracker, rest)
 	end
-until action == "exit"
+until action:lower() == "exit"
 
 Clear()
 local tc = term.getTextColor()

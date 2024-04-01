@@ -35,7 +35,7 @@ end
 
 ---Prints `text` and then prompts for some input.
 ---@param prompt_str Doc
----@param values? string[]
+---@param values? string[] | fun(): string[]
 ---@param color? color
 ---@param history? string[]
 ---@param repl? string
@@ -50,6 +50,9 @@ local function prompt(prompt_str, values, color, history, repl, default)
 
 	term.setTextColor(color or colors.white)
 	local answer = read(repl, history, function(str)
+		if type(values) == "function" then
+			values = values()
+		end
 		return completion.choice(str, values or {})
 	end, default)
 	print("")
@@ -71,18 +74,16 @@ local function promt_args(values)
 end
 
 ---@generic T
----@param arr `T`[][]
+---@param arr T[][]
 ---@param rotations integer
----@return `T`[][]
+---@return T[][]
 local function rotate2d(arr, rotations)
-	---@type `T`[][]
 	local result = {}
 
 	rotations = rotations % 4
 
 	for _, row in ipairs(arr) do
 		local new_row = {}
-		---@diagnostic disable-next-line: no-unknown
 		for _, v in ipairs(row) do
 			table.insert(new_row, v)
 		end
@@ -90,10 +91,10 @@ local function rotate2d(arr, rotations)
 	end
 
 	for _ = 1, rotations do
-		---@type `T`[][]
+		---@generic T
+		---@type T[][]
 		local rotated = {}
 		for x, row in ipairs(result) do
-			---@diagnostic disable-next-line: no-unknown
 			for y, v in ipairs(row) do
 				rotated[y] = rotated[y] or {}
 				local idx = (#row - x) + 1
@@ -120,13 +121,6 @@ local function concat2d(arr)
 end
 
 return {
-	-- get_user = get_user,
-	-- change_user = change_user,
-	-- get_nick = get_nick,
-	-- change_nick = change_nick,
-	-- load_config = load_settings,
-	-- text = text,
-	-- get_colors = get_colors,
 	prompt = prompt,
 	prompt_args = promt_args,
 	rotate2d = rotate2d,

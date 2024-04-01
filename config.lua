@@ -27,10 +27,7 @@ local nicks = {} ---@type { [string]: string }
 local user ---@type string
 
 ---@class AppConfig
-local M = {
-	user = {},
-	nicks = {},
-}
+local M = { }
 
 ---@class ConfigColors
 local Colors = {
@@ -60,18 +57,21 @@ function M.load()
 	user = saved.user or user
 end
 
+---@class NicksConf
+M.nicks = {}
+
 ---Returns the username associated with `nick`
 ---@param nick string
 ---@return string?
 function M.nicks.get(nick)
-	return nicks[nick]
+	return nicks[nick:lower()]
 end
 
 ---Changes `nick` to be associated to `user`
 ---@param nick string
 ---@param username string?
 function M.nicks.change(nick, username)
-	nicks[nick] = username
+	nicks[nick:lower()] = username
 	M.save()
 end
 
@@ -84,6 +84,10 @@ function M.nicks.all()
 	end
 	return result
 end
+
+
+---@class UserConf
+M.user = {}
 
 ---Changes the apps user to `username`
 ---@param username string
