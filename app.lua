@@ -147,8 +147,8 @@ local function print_pos(position)
 
 		---@type string[][]
 		local direction_arr = {
-			{},
-			{},
+			{ lo, lo, e, e, e,  lo, e,  e, e, lo, lo },
+			{ lo, e,  e, e, lo, lo, lo, e, e, e,  lo },
 			{ e,  e,  e, e, e,  e,  e,  e, e, e,  e },
 			{ e,  e,  e, e, e,  e,  e,  e, e, e,  e },
 			{ e,  lo, e, e, e,  e,  e,  e, e, lo, e },
@@ -160,16 +160,19 @@ local function print_pos(position)
 			{ lo, lo, e, e, e,  lo, e,  e, e, lo, lo },
 		}
 		if (direction % 2) == 0 then
-			direction_arr[1] = { lo, lo, e, e, e, hi, e, e, e, lo, lo }
-			direction_arr[2] = { lo, e, e, e, hi, hi, hi, e, e, e, lo }
+			direction_arr[1][6] = hi
+			direction_arr[2][5] = hi
+			direction_arr[2][6] = hi
+			direction_arr[2][7] = hi
 			direction = direction / 2
 		else
-			direction_arr[1] = { lo, lo, e, e, e, lo, e, e, e, hi, hi }
-			direction_arr[2] = { lo, e, e, e, lo, lo, lo, e, e, e, hi }
+			direction_arr[1][10] = hi
+			direction_arr[1][11] = hi
+			direction_arr[2][11] = hi
 			direction = (direction - 1) / 2
 		end
 		if direction < 0 then
-			direction = direction + 4
+			direction = direction + 8
 		end
 
 		local rotated = utils.rotate2d(direction_arr, direction)

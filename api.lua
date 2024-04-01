@@ -67,13 +67,13 @@ end
 ---@return number yaw
 function Tracker.get_direction(user, x, z)
 	local abs_yaw = math.atan2(x, -z) * (180 / math.pi)
-	local yaw = abs_yaw - user.yaw
-
-	if yaw > 180 then
-		return yaw - 180
+	local result = (abs_yaw - user.yaw) % 360
+	if result > 180 then
+		return result - 360
+	elseif result < 180 then
+		return result + 360
 	end
-
-	return yaw
+	return result
 end
 
 ---Returns the distance of the given coordinates
