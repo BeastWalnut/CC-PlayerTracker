@@ -157,21 +157,21 @@ local function print_pos(position)
 
 		local hi = colors.toBlit(c.info) -- High
 		local lo = colors.toBlit(colors.gray) -- Low
-		local e = " "                   -- Empty
+		local e = " " -- Empty
 
 		---@type string[][]
 		local direction_arr = {
-			{ lo, lo, e, e, e,  lo, e,  e, e, lo, lo },
-			{ lo, e,  e, e, lo, lo, lo, e, e, e,  lo },
-			{ e,  e,  e, e, e,  e,  e,  e, e, e,  e },
-			{ e,  e,  e, e, e,  e,  e,  e, e, e,  e },
-			{ e,  lo, e, e, e,  e,  e,  e, e, lo, e },
-			{ lo, lo, e, e, e,  e,  e,  e, e, lo, lo },
-			{ e,  lo, e, e, e,  e,  e,  e, e, lo, e },
-			{ e,  e,  e, e, e,  e,  e,  e, e, e,  e },
-			{ e,  e,  e, e, e,  e,  e,  e, e, e,  e },
-			{ lo, e,  e, e, lo, lo, lo, e, e, e,  lo },
-			{ lo, lo, e, e, e,  lo, e,  e, e, lo, lo },
+			{ lo, lo, e, e, e, lo, e, e, e, lo, lo },
+			{ lo, e, e, e, lo, lo, lo, e, e, e, lo },
+			{ e, e, e, e, e, e, e, e, e, e, e },
+			{ e, e, e, e, e, e, e, e, e, e, e },
+			{ e, lo, e, e, e, e, e, e, e, lo, e },
+			{ lo, lo, e, e, e, e, e, e, e, lo, lo },
+			{ e, lo, e, e, e, e, e, e, e, lo, e },
+			{ e, e, e, e, e, e, e, e, e, e, e },
+			{ e, e, e, e, e, e, e, e, e, e, e },
+			{ lo, e, e, e, lo, lo, lo, e, e, e, lo },
+			{ lo, lo, e, e, e, lo, e, e, e, lo, lo },
 		}
 		if (direction % 2) == 0 then
 			direction_arr[1][6] = hi
@@ -236,13 +236,13 @@ function ACTIONS.unknown()
 end
 
 function ACTIONS.find(tracker, rest)
-	local target ---@type string?
-	target = rest_or_prompt(rest, text.secondary("Choose player to find:"), function()
+	local target = rest_or_prompt(rest, text.secondary("Choose player to find:"), function()
 		local online = tracker:get_online()
 		table.insert(online, "Nearest")
 		table.insert(online, "nearest")
 		return online
 	end, colors.red)
+	target = config.nicks.get(target) or target
 
 	if target:lower() == "nearest" then
 		target = tracker:get_nearest()
@@ -280,13 +280,13 @@ end
 ACTIONS.locate = ACTIONS.find
 
 function ACTIONS.track(tracker, rest)
-	local target ---@type string?
-	target = rest_or_prompt(rest, text.secondary("Choose player to find:"), function()
+	local target = rest_or_prompt(rest, text.secondary("Choose player to find:"), function()
 		local online = tracker:get_online()
 		table.insert(online, "Nearest")
 		table.insert(online, "nearest")
 		return online
 	end, colors.red)
+	target = config.nicks.get(target) or target
 	local enabled = true
 
 	local find_nearest = target:lower() == "nearest"
